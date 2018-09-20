@@ -382,11 +382,7 @@ void gameSave()//即时保存
 	}
 	printf("New Save\n");
 	write(fd_save,Data,sizeof(Data));
-<<<<<<< HEAD
 	write(fd_save,&Score,sizeof(Score));
-=======
-    write(fd_save,&Score,sizeof(Score));
->>>>>>> e8fe618c0126c1615b2abfbd9597e2f2121d474c
 	close(fd_save);
 }
 
@@ -408,11 +404,7 @@ int gameLoad()//加载存档
 			close(fd_save);
 			return ERROR;
 		}
-<<<<<<< HEAD
 		read(fd_save,&Score,sizeof(Score));
-=======
-        read(fd_save,&Score,sizeof(Score));
->>>>>>> e8fe618c0126c1615b2abfbd9597e2f2121d474c
 		close(fd_save);
 		return SUCCESS;
 	}
