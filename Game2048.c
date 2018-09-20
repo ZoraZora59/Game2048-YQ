@@ -400,6 +400,7 @@ int gameLoad()//加载存档
 			close(fd_save);
 			return ERROR;
 		}
+        read(fd_save,&Score,sizeof(Score));
 		close(fd_save);
 		return SUCCESS;
 	}
