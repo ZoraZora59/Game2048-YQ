@@ -339,7 +339,7 @@ int main(int argc,char *argv[])
 		if(check==SUCCESS)//运行成功则进入下一轮，输入错误则继续进行输入
 		{
 			printf("\nScore:::%d\nHighest Score:%d\n\n",Score,highestScore);
-			drawNum(150,250,highestScore);
+			drawNum(50,250,highestScore);
 			drawNum(50,120,Score);
 			check=newBlock();//检测是否有空格，在可能的情况下生成新砖块
 			showTable();//打印数据
