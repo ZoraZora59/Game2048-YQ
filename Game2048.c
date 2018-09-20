@@ -326,9 +326,9 @@ int main(int argc,char *argv[])
 		return ERROR;
 	}
 	highestScore=scoreRead();
+	initTable();//初始化空白矩阵图案
 	if(check=gameLoad()!=SUCCESS)//加载存档
 	{
-		initTable();//初始化空白矩阵图案
    	 	srand((int)time(0)); //随机数种子
 		setInit(rand(),rand(),rand(),rand());//随机生成初始两方格
 	}
@@ -355,6 +355,10 @@ int main(int argc,char *argv[])
 				return ERROR;
 			}
 		}
+		else
+		{
+			isGameOver=checkGame();
+		}
 	}
 	gameSaveReset();
 	if(Score>highestScore)//最高分判断和更新
@@ -378,6 +382,7 @@ void gameSave()//即时保存
 	}
 	printf("New Save\n");
 	write(fd_save,Data,sizeof(Data));
+	write(fd_save,&Score,sizeof(Score));
 	close(fd_save);
 }
 
@@ -399,6 +404,7 @@ int gameLoad()//加载存档
 			close(fd_save);
 			return ERROR;
 		}
+		read(fd_save,&Score,sizeof(Score));
 		close(fd_save);
 		return SUCCESS;
 	}
@@ -435,7 +441,7 @@ void scoreUpdate()//更新最高分
 
 int checkGame()//判断游戏是否结束
 {
-	int i,j;
+	int i,j,count=0;
 	for(i=0;i<SQUARE_NUM;i++)
 	{
 		for(j=0;j<SQUARE_NUM;j++)
@@ -445,7 +451,16 @@ int checkGame()//判断游戏是否结束
 				printf("Still Live\n");
 				return FALSE;
 			}
+			if(Data[i][j]==0)
+            {
+                count++;
+            }
 		}
+	}
+	if(count!=0)
+	{
+		printf("Some Empty Block Still There\n");
+		return FALSE;
 	}
 	printf("Game Over\n");
 	return TRUE;
@@ -684,7 +699,7 @@ int newBlock()// 新方块
 {
     int i,j,count,random;
     count=0;
-    for(i=0;i<SQUARE_NUM;i++)
+    for(i=0;i<SQUARE_NUM;i++)//遍历统计空白方块
     {
         for(j=0;j<SQUARE_NUM;j++)
         {
@@ -696,6 +711,7 @@ int newBlock()// 新方块
     }
     if(count==0)
     {
+		printf("No Empty Block\n");
         return FULL;
     }
     else if(count==1)
@@ -721,29 +737,29 @@ int newBlock()// 新方块
             }
         }
     }
-    random=rand();
-    random=random%count;
-    count-=random;
-    random=(random%4>2)?4:2;
-    for(i=0;i<SQUARE_NUM;i++)
-    {
-        for(j=0;j<SQUARE_NUM;j++)
-        {
-            if(Data[i][j]==0)
-            {
-                if(count==0)
-                {
-                    Data[i][j]=random;
-                    return SUCCESS;
-                }
-                else
-                {
-                    
-                    count--;
-                }
-            }
-        }
-    }
+    else
+	{
+		random=rand();
+		random=random%count;
+		count-=random;
+		random=(random%4>2)?4:2;
+		for(i=0;i<SQUARE_NUM;i++)
+		{
+			for(j=0;j<SQUARE_NUM;j++)
+			{
+				if(Data[i][j]==0)
+				{
+					count--;
+					if(count==0)
+					{
+						Data[i][j]=random;
+						return SUCCESS;
+					}
+				}
+			}
+		}
+	}
+	printf("No New Block Init\n");
 	return UNMOVE;
 }
 
@@ -767,11 +783,11 @@ int doMix()// 进行合并
 			}
 			if(nextNum!=-1)
 			{
-				isChange++;
 				if(temp[i][j]==0)
 				{
 					temp[i][j]=temp[i][m];
 					temp[i][m]=0;
+					isChange++;
 					j--;
 				}
 				else if(temp[i][j]==temp[i][m])
@@ -780,6 +796,7 @@ int doMix()// 进行合并
 					Score+=temp[i][j];//加分
 					printf("Score Add Success\n");
 					temp[i][m]=0;
+					isChange++;
 					j--;
 				}
 			}
