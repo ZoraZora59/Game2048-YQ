@@ -320,11 +320,11 @@ int main(int argc,char *argv[])
 {
 	int check,highestScore;//检查值
 	isGameOver = FALSE;//初始化游戏运行判定
-	Score=0;
 	if(check=lcdInit()!=SUCCESS)//屏幕初始化
 	{
 		return ERROR;
 	}
+	Score=0;
 	highestScore=scoreRead();
 	initTable();//初始化空白矩阵图案
 	if(check=gameLoad()!=SUCCESS)//加载存档
@@ -335,12 +335,12 @@ int main(int argc,char *argv[])
     showTable();//打印数据
     while(isGameOver!=TRUE)//游戏运行判断
 	{
+		drawNum(50,250,highestScore);
+		drawNum(50,120,Score);
 		check=gameLogic(getTouch());//游戏获取输入并进行运算返回值为运行成功和输入错误
 		if(check==SUCCESS)//运行成功则进入下一轮，输入错误则继续进行输入
 		{
 			printf("\nScore:::%d\nHighest Score:%d\n\n",Score,highestScore);
-			drawNum(50,250,highestScore);
-			drawNum(50,120,Score);
 			check=newBlock();//检测是否有空格，在可能的情况下生成新砖块
 			showTable();//打印数据
 			gameSave();//即时存档
@@ -368,7 +368,7 @@ int main(int argc,char *argv[])
 	}
 	printf("Game Over\n\n");//游戏结束并关闭显示屏等
 	lcdClose();//关闭屏幕
-    return SUCCESS;//感谢游玩
+	return SUCCESS;//感谢游玩
 }
 
 void gameSave()//即时保存
@@ -530,7 +530,7 @@ void drawPic(char *file,int x0,int y0)//按比例在（x0，y0）处绘制边长
 
 void drawGameOver()
 {
-	int fd=open("/home/num_bmp/game_over.bmp",O_RDWR);
+	int fd=open("/home/num_bmp/game_over_300x150.bmp",O_RDWR);
 	if(fd==-1)
 	{
 		printf("bmp error\n");
@@ -545,19 +545,20 @@ void drawGameOver()
 	int i=0,x,y;
 	char b,g,r;
 	int color;
-	for(y=90+150-1;y>=90;y--)
+	for(y=170+150;y>170;y--)
 	{
-		for(x=420;x<420+300;x++)
+		for(x=410;x<410+300;x++)
 		{
 			b=bit[54+i];
 			g=bit[54+i+1];
 			r=bit[54+i+2];
 			i+=3;
 			//合成一个像素点
-			color=(r<<16)|(g<<8)|(b<<0);
-			*(plcd+(480-y)*800+x)=color;
+			color=(0<<24)|(r<<16)|(g<<8)|(b<<0);
+			drawPoint(x ,480-y, color);
 		}
 	}
+	close(fd);
 }
 
 void initTable()//初始化游戏界面（无数据）
@@ -565,7 +566,6 @@ void initTable()//初始化游戏界面（无数据）
 	//LCD清屏
 	lcdClear(0xfffffacd);
 	drawBlock(360,40,400,400,0xffffd700);
-	
 	initDrawWord();
 	//绘制初始方格
 	int x,y;
@@ -770,7 +770,6 @@ int newBlock()// 新方块
             }
         }
     }
-<<<<<<< HEAD
     else
 	{
 		random=rand();
@@ -794,30 +793,6 @@ int newBlock()// 新方块
 		}
 	}
 	printf("No New Block Init\n");
-=======
-    random=rand();
-    random=random%count;
-    count-=random;
-    random=(random%4>2)?4:2;
-    for(i=0;i<SQUARE_NUM;i++)
-    {
-        for(j=0;j<SQUARE_NUM;j++)
-        {
-            if(Data[i][j]==0)
-            {
-                if(count==0)
-                {
-                    Data[i][j]=random;
-                    return SUCCESS;
-                }
-                else
-                {
-                    count--;
-                }
-            }
-        }
-    }
->>>>>>> e8fe618c0126c1615b2abfbd9597e2f2121d474c
 	return UNMOVE;
 }
 
