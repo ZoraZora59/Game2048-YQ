@@ -53,8 +53,8 @@ void lcdClose();
 void setInit(int number1,int number2,int number3,int number4);
 void drawWord(int x0,int y0,char ch[],int w,int h,int color);
 void drawNum(int x0,int y0,int num);
-void drawScore();
-void drawHighest();
+void drawGameOver();
+void initDrawWord();
 void scoreUpdate();
 void gameSave();
 void gameSaveReset();
@@ -326,9 +326,9 @@ int main(int argc,char *argv[])
 		return ERROR;
 	}
 	highestScore=scoreRead();
+	initTable();//初始化空白矩阵图案
 	if(check=gameLoad()!=SUCCESS)//加载存档
 	{
-		initTable();//初始化空白矩阵图案
    	 	srand((int)time(0)); //随机数种子
 		setInit(rand(),rand(),rand(),rand());//随机生成初始两方格
 	}
@@ -378,6 +378,7 @@ void gameSave()//即时保存
 	}
 	printf("New Save\n");
 	write(fd_save,Data,sizeof(Data));
+    write(fd_save,&Score,sizeof(Score));
 	close(fd_save);
 }
 
@@ -448,6 +449,7 @@ int checkGame()//判断游戏是否结束
 		}
 	}
 	printf("Game Over\n");
+	drawGameOver();
 	return TRUE;
 }
 
@@ -512,14 +514,45 @@ void drawPic(char *file,int x0,int y0)//按比例在（x0，y0）处绘制边长
 	}
 }
 
+void drawGameOver()
+{
+	int fd=open("/home/num_bmp/game_over.bmp",O_RDWR);
+	if(fd==-1)
+	{
+		printf("bmp error\n");
+		return;
+	}
+	int len=54+300*150*3;
+	char bit[len];
+	read(fd,bit,len);
+	close(fd);
+	
+	//遍历数组中的每一个字节，得出图片的每一个像素点
+	int i=0,x,y;
+	char b,g,r;
+	int color;
+	for(y=90+150-1;y>=90;y--)
+	{
+		for(x=420;x<420+300;x++)
+		{
+			b=bit[54+i];
+			g=bit[54+i+1];
+			r=bit[54+i+2];
+			i+=3;
+			//合成一个像素点
+			color=(r<<16)|(g<<8)|(b<<0);
+			*(plcd+(480-y)*800+x)=color;
+		}
+	}
+}
+
 void initTable()//初始化游戏界面（无数据）
 {
 	//LCD清屏
 	lcdClear(0xfffffacd);
 	drawBlock(360,40,400,400,0xffffd700);
 	
-	drawScore();
-	drawHighest();
+	initDrawWord();
 	//绘制初始方格
 	int x,y;
 	block_len=(400-GAP*2*SQUARE_NUM)/SQUARE_NUM;
@@ -611,6 +644,7 @@ int gameLogic(int value)//游戏逻辑部分
 			putRight(PUTBACK);
 			break;
 		default:
+            printf("WRONG INPUT\n");
 			break;
 	}
 	if(check==SUCCESS)
@@ -632,9 +666,9 @@ void showTable()//打印数据
 	{
 		for(j=0;j<SQUARE_NUM;j++)
 		{
-			printf("%d  ",Data[i][j]);
-			x=360+(block_len+2*GAP)*j+GAP;
-			y=40+(block_len+2*GAP)*(SQUARE_NUM-1-i)+GAP;
+			printf("%d\t",Data[i][j]);
+			x=360+GAP+(block_len+2*GAP)*j;
+			y=40+GAP+(block_len+2*GAP)*(SQUARE_NUM-1-i);
 			switch(Data[i][j])
 			{
 				case 0:
@@ -738,7 +772,6 @@ int newBlock()// 新方块
                 }
                 else
                 {
-                    
                     count--;
                 }
             }
@@ -767,12 +800,12 @@ int doMix()// 进行合并
 			}
 			if(nextNum!=-1)
 			{
-				isChange++;
 				if(temp[i][j]==0)
 				{
 					temp[i][j]=temp[i][m];
 					temp[i][m]=0;
 					j--;
+                    isChange++;
 				}
 				else if(temp[i][j]==temp[i][m])
 				{
@@ -781,6 +814,7 @@ int doMix()// 进行合并
 					printf("Score Add Success\n");
 					temp[i][m]=0;
 					j--;
+                    isChange++;
 				}
 			}
 		}
@@ -792,7 +826,7 @@ int doMix()// 进行合并
 	}
 	else
 	{
-		printf("Mix Success\n");
+		printf("Mix Success Swap for %d time\n",isChange);
 		return SUCCESS;
 	}
 }
@@ -989,22 +1023,17 @@ void drawNum(int x0,int y0,int num)//显示五位以内的数字
 		if(i==0&&n[0]==0);
 		else if(i==1&&n[0]==0&&n[1]==0);
 		else if(i==2&&n[0]==0&&n[1]==0&&n[2]==0);
-		else drawWord(x0+i*24,y0,scoreNum[n[i]],24,48,0xffa07a);
+		else drawWord(x0+i*24,y0,scoreNum[n[i]],24,48,0xffffa07a);
 	}
 }
 
-void drawScore()//显示score:
+void initDrawWord(int y0,int w,int h,int a,char ch[])//显示score：最高分：
 {
 	int i;
 	for(i=0;i<6;i++)
 	{
 		drawWord(20+i*24,60,score[i],24,48,0xffcd8500);
 	}
-}
-
-void drawHighest()//显示最高分：
-{
-	int i;
 	for(i=0;i<4;i++)
 	{
 		drawWord(20+i*48,200,scoreHigest[i],48,48,0xffcd8500);
